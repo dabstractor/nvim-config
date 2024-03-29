@@ -129,4 +129,6 @@ return {
   'ton/vim-bufsurf',
 
   'subnut/nvim-ghost.nvim',
+
+  'Leathong/openscad-LSP',
 }
