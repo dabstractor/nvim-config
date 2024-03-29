@@ -35,6 +35,7 @@ return { -- Autoformat
       javascriptreact = { { 'prettierd', 'prettier' } },
       yaml = { 'yamlfmt', 'yamlfix' },
       yml = { 'yamlfmt', 'yamlfix' },
+      openscad = { 'openscad-lsp' },
     },
   },
 }
