@@ -36,6 +36,7 @@ return { -- Autoformat
       json = { 'jq' },
       yaml = { 'yamlfmt', 'yamlfix' },
       yml = { 'yamlfmt', 'yamlfix' },
-    }
+      openscad = { 'openscad-lsp' },
+    },
   },
 }
