@@ -2,6 +2,9 @@ return {
   'Mulletware/lazydocker.nvim',
   event = 'VeryLazy',
   opts = {}, -- automatically calls `require("lazydocker").setup()`
+  dependencies = {
+    'MunifTanjim/nui.nvim',
+  },
   config = function()
     require('lazydocker').setup {
       popup_window = {
@@ -13,8 +16,7 @@ return {
         },
       },
     }
+
+    require '../popuptest'
   end,
-  dependencies = {
-    'MunifTanjim/nui.nvim',
-  },
 }
