@@ -10,7 +10,7 @@ return {
     require('codecompanion').setup {
       strategies = {
         chat = {
-          adapter = 'openrouter_gemini',
+          adapter = 'ccr',
           keymaps = {
             close = {
               modes = { n = '<leader>ccw', i = '<C-c><C-w>' },
@@ -37,13 +37,26 @@ return {
           },
         },
         inline = {
-          adapter = 'openrouter_gemini',
+          adapter = 'ccr',
         },
         cmd = {
-          adapter = 'openrouter_gemini',
+          adapter = 'ccr',
         },
       },
       adapters = {
+        claude_code = function()
+          return require('codecompanion.adapters').extend('claude_code', {
+            env = {},
+          })
+        end,
+        ccr = function()
+          vim.fn.system 'ccr start'
+          return require('codecompanion.adapters').extend('claude_code', {
+            env = {
+              ANTHROPIC_BASE_URL = 'http://localhost:3456',
+            },
+          })
+        end,
         openai = function()
           return require('codecompanion.adapters').extend('openai', {
             schema = {
