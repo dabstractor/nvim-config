@@ -61,10 +61,41 @@ map({ 'n', 'i' }, '<C-S-A-j>', ':resize -2<cr>', { desc = 'Resize horizontal pan
 map({ 'n', 'i' }, '<C-S-A-k>', ':resize +2<cr>', { desc = 'Resize horizontal pane up', silent = true })
 map({ 'n', 'i' }, '<C-S-A-l>', ':vertical resize +2<cr>', { desc = 'Resize vertical pane up', silent = true })
 
-map({ 'n', 'i' }, '<C-A-ScrollWheelUp>', ':vertical resize -2<cr>', { desc = 'Resize vertical pane down', silent = true })
-map({ 'n', 'i' }, '<C-A-ScrollWheelDown>', ':vertical resize +2<cr>', { desc = 'Resize vertical pane down', silent = true })
-map({ 'n', 'i' }, '<C-A-S-ScrollWheelDown>', ':resize -2<cr>', { desc = 'Resize horizontal pane down', silent = true })
-map({ 'n', 'i' }, '<C-A-S-ScrollWheelUp>', ':resize +2<cr>', { desc = 'Resize horizontal pane up', silent = true })
+-- Smart resize functions that detect edge windows and reverse behavior
+local function smart_resize_horizontal(direction)
+  return function()
+    local current_win = vim.fn.winnr()
+    local rightmost_win = vim.fn.winnr 'l'
+    local is_rightmost = current_win == rightmost_win
+
+    if is_rightmost then
+      -- Reverse direction for rightmost window
+      vim.cmd('vertical resize ' .. (direction > 0 and '-2' or '+2'))
+    else
+      vim.cmd('vertical resize ' .. (direction > 0 and '+2' or '-2'))
+    end
+  end
+end
+
+local function smart_resize_vertical(direction)
+  return function()
+    local current_win = vim.fn.winnr()
+    local bottommost_win = vim.fn.winnr 'j'
+    local is_bottommost = current_win == bottommost_win
+
+    if is_bottommost then
+      -- Reverse direction for bottommost window
+      vim.cmd('resize ' .. (direction > 0 and '-2' or '+2'))
+    else
+      vim.cmd('resize ' .. (direction > 0 and '+2' or '-2'))
+    end
+  end
+end
+
+map({ 'n', 'i' }, '<C-A-ScrollWheelUp>', smart_resize_horizontal(-1), { desc = 'Resize vertical pane left', silent = true })
+map({ 'n', 'i' }, '<C-A-ScrollWheelDown>', smart_resize_horizontal(1), { desc = 'Resize vertical pane right', silent = true })
+map({ 'n', 'i' }, '<C-A-S-ScrollWheelDown>', smart_resize_vertical(1), { desc = 'Resize horizontal pane up', silent = true })
+map({ 'n', 'i' }, '<C-A-S-ScrollWheelUp>', smart_resize_vertical(-1), { desc = 'Resize horizontal pane down', silent = true })
 
 local closeTab = function()
   require('mini.bufremove').unshow()
