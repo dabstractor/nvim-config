@@ -57,7 +57,15 @@ return {
   {
     'pmizio/typescript-tools.nvim',
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
-    opts = {},
+    opts = {
+      settings = {
+        -- Ported from the old ts_ls config. These map directly to tsserver's
+        -- UserPreferences.
+        tsserver_file_preferences = {
+          includePackageJsonAutoImports = 'off',
+        },
+      },
+    },
   },
 
   {

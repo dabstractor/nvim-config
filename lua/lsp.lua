@@ -141,24 +141,10 @@ return { -- LSP Configuration & Plugins
       rust_analyzer = {},
       phpactor = {},
       openscad_lsp = {},
-      -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-      --
-      -- Some languages (like typescript) have entire language plugins that can be useful:
-      --    https://github.com/pmizio/typescript-tools.nvim
-      --
-      -- But for many setups, the LSP (`tsserver`) will work just fine
-      ts_ls = {
-        root_dir = function(fname)
-          local lspconfig = require 'lspconfig'
-          return lspconfig.util.root_pattern('package.json', 'tsconfig.json', 'jsconfig.json', '.git')(fname) or lspconfig.util.find_git_ancestor(fname)
-        end,
-        settings = {
-          packageManager = 'npm',
-          typescript = {
-            includePackageJsonAutoImports = 'off',
-          },
-        },
-      },
+      -- NOTE: TypeScript is handled by `pmizio/typescript-tools.nvim` (see
+      -- lua/plugins/init.lua), NOT by ts_ls here. We intentionally do NOT add
+      -- `ts_ls` -- having both servers attached to .ts/.tsx causes duplicated
+      -- diagnostics, hover, and conflicting format providers.
 
       lua_ls = {
         settings = {
@@ -197,6 +183,9 @@ return { -- LSP Configuration & Plugins
     vim.list_extend(ensure_installed, {
       'stylua', -- Used to format Lua code
       'yamlfmt',
+      -- JS/TS toolchain (used by conform.nvim for format-on-save)
+      'prettierd',
+      'prettier',
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
