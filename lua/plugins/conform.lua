@@ -1,9 +1,10 @@
 local disable_filetypes = { c = true, cpp = true }
 
--- Nested table = "try the first, fall back to the second".
--- prettierd is a long-running Prettier daemon (much faster); prettier is the
--- plain CLI fallback. Both honor the project's .prettierrc / package.json config.
-local prettier = { { 'prettierd', 'prettier' } }
+-- `stop_after_first = true` (inside the list) means "use the first available
+-- formatter, ignore the rest" -- i.e. prefer the prettierd daemon, but fall
+-- back to the plain prettier CLI if prettierd isn't installed. Both honor the
+-- project's .prettierrc / package.json config.
+local prettier = { 'prettierd', 'prettier', stop_after_first = true }
 
 return { -- Autoformat
   'stevearc/conform.nvim',
@@ -64,7 +65,7 @@ return { -- Autoformat
       javascriptreact = prettier,
       typescript = prettier,
       typescriptreact = prettier,
-      json = { 'prettierd', 'prettier', 'jq' },
+      json = { 'prettierd', 'prettier', 'jq', stop_after_first = true },
       jsonc = prettier,
       html = prettier,
       css = prettier,
