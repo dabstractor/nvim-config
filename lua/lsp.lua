@@ -141,6 +141,15 @@ return { -- LSP Configuration & Plugins
       rust_analyzer = {},
       phpactor = {},
       openscad_lsp = {},
+      -- ESLint LSP: live lint diagnostics + code actions (autofix / "fix all").
+      -- ESLint 10 flat config (eslint.config.js) is auto-detected by recent
+      -- eslint-lsp. Prettier (via conform) remains the sole formatter; your
+      -- eslint.config.js applies eslint-config-prettier last, so the two never
+      -- conflict. If diagnostics don't show up, uncomment the experimental line.
+      eslint = {
+        filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
+        -- settings = { experimental = { useFlatConfig = true } },
+      },
       -- NOTE: TypeScript is handled by `pmizio/typescript-tools.nvim` (see
       -- lua/plugins/init.lua), NOT by ts_ls here. We intentionally do NOT add
       -- `ts_ls` -- having both servers attached to .ts/.tsx causes duplicated
@@ -186,6 +195,8 @@ return { -- LSP Configuration & Plugins
       -- JS/TS toolchain (used by conform.nvim for format-on-save)
       'prettierd',
       'prettier',
+      -- JS/TS linter (LSP) -- see the `eslint` server above
+      'eslint-lsp',
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
