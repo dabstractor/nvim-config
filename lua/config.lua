@@ -33,6 +33,10 @@ vim.opt.smartindent = false
 -- Save undo history
 vim.opt.undofile = true
 
+-- Automatically handle swap files without prompting
+-- This prevents the ATTENTION dialog when opening files with existing swap files
+vim.opt.shortmess:append 'A'
+
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
