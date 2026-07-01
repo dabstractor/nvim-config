@@ -29,24 +29,35 @@ return { -- Autoformat
         return false
       end
 
-      -- NEVER format a broken file.
+      -- Only refuse to format when the file is *structurally* broken.
       --
-      -- If, say, a template literal (backtick) is left unclosed, everything
-      -- below it stops being a string and becomes live JavaScript. At that
-      -- point the formatter happily rewrites your CSS-in-JS as if it were
-      -- arithmetic -- `min-width` becomes `min - width` (subtraction),
-      -- `100%` becomes `100 %` (modulo), braces get reshuffled, etc.
+      -- The footgun this guards against: an unclosed template literal (or a
+      -- stray bracket) makes everything below it parse as live JavaScript, so
+      -- the formatter rewrites your CSS-in-JS as arithmetic -- `min-width`
+      -- becomes `min - width` (subtraction), `100%` becomes `100 %` (modulo),
+      -- braces get reshuffled, etc.
       --
-      -- ts_ls/typescript-tools/eslint all flag that garbage with ERROR-level
-      -- diagnostics the instant it appears, so bailing here prevents the
-      -- formatter from ever running against a mis-parsed buffer.
+      -- Those structural breaks show up as tsserver SYNTAX diagnostics (code
+      -- < 2000, e.g. 1005 "';' expected", 1109 "Expression expected").
+      -- Ordinary type errors from a mid-refactor file are SEMANTIC (code
+      -- 2xxx+, e.g. 2322/2304) and do NOT block formatting, so you can keep
+      -- formatting while you work -- only an actually-unparseable file is
+      -- skipped.
       --
       -- NOTE: the manual `<leader>fm` mapping above is intentionally NOT
       -- gated, so you can still force a format when you really mean it.
-      local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
-      if #errors > 0 then
+      local has_syntax_error = false
+      for _, d in ipairs(vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })) do
+        local code = d.code
+        if code == nil and d.user_data and d.user_data.lsp then code = d.user_data.lsp.code end
+        if type(code) == 'number' and code < 2000 then
+          has_syntax_error = true
+          break
+        end
+      end
+      if has_syntax_error then
         vim.notify(
-          ('Skipping format-on-save: %d error(s) in buffer'):format(#errors),
+          'Skipping format-on-save: syntax error in buffer',
           vim.log.levels.WARN,
           { title = 'conform' }
         )
