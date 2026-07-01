@@ -44,66 +44,68 @@ return {
         },
       },
       adapters = {
-        claude_code = function()
-          return require('codecompanion.adapters').extend('claude_code', {
-            env = {},
-          })
-        end,
-        ccr = function()
-          vim.fn.system 'ccr start'
-          return require('codecompanion.adapters').extend('claude_code', {
-            env = {
-              ANTHROPIC_BASE_URL = 'http://localhost:3456',
-            },
-          })
-        end,
-        openai = function()
-          return require('codecompanion.adapters').extend('openai', {
-            schema = {
-              model = {
-                default = 'o3-mini',
+        http = {
+          claude_code = function()
+            return require('codecompanion.adapters').extend('claude_code', {
+              env = {},
+            })
+          end,
+          ccr = function()
+            vim.fn.system 'ccr start'
+            return require('codecompanion.adapters').extend('claude_code', {
+              env = {
+                ANTHROPIC_BASE_URL = 'http://localhost:3456',
               },
-            },
-            env = {
-              OPENAI_API_KEY = vim.fn.getenv 'OPENAI_API_KEY',
-            },
-          })
-        end,
-        githubmodels = function()
-          return require('codecompanion.adapters').extend('githubmodels', {
-            schema = {
-              model = {
-                default = 'DeepSeek-R1',
+            })
+          end,
+          openai = function()
+            return require('codecompanion.adapters').extend('openai', {
+              schema = {
+                model = {
+                  default = 'o3-mini',
+                },
               },
-            },
-          })
-        end,
-        gemini = function()
-          return require('codecompanion.adapters').extend('gemini', {
-            env = {
-              api_key = vim.fn.getenv 'GEMINI_API_KEY',
-            },
-            schema = {
-              model = {
-                default = 'gemini-2.5-pro-exp-03-25',
+              env = {
+                OPENAI_API_KEY = vim.fn.getenv 'OPENAI_API_KEY',
               },
-            },
-          })
-        end,
-        openrouter_gemini = function()
-          return require('codecompanion.adapters').extend('openai_compatible', {
-            env = {
-              url = 'https://openrouter.ai/api',
-              api_key = vim.fn.getenv 'OPENROUTER_API_KEY',
-              chat_url = '/v1/chat/completions',
-            },
-            schema = {
-              model = {
-                default = 'google/gemini-2.5-pro-exp-03-25:free',
+            })
+          end,
+          githubmodels = function()
+            return require('codecompanion.adapters').extend('githubmodels', {
+              schema = {
+                model = {
+                  default = 'DeepSeek-R1',
+                },
               },
-            },
-          })
-        end,
+            })
+          end,
+          gemini = function()
+            return require('codecompanion.adapters').extend('gemini', {
+              env = {
+                api_key = vim.fn.getenv 'GEMINI_API_KEY',
+              },
+              schema = {
+                model = {
+                  default = 'gemini-2.5-pro-exp-03-25',
+                },
+              },
+            })
+          end,
+          openrouter_gemini = function()
+            return require('codecompanion.adapters').extend('openai_compatible', {
+              env = {
+                url = 'https://openrouter.ai/api',
+                api_key = vim.fn.getenv 'OPENROUTER_API_KEY',
+                chat_url = '/v1/chat/completions',
+              },
+              schema = {
+                model = {
+                  default = 'google/gemini-2.5-pro-exp-03-25:free',
+                },
+              },
+            })
+          end,
+        },
       },
     }
     -- add 2 commands:
