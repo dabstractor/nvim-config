@@ -55,6 +55,41 @@ map({ 'n', 'i' }, '<C-A-l>', ':vsplit<cr>', { desc = 'Pane open to the right (cu
 map({ 'n', 'i' }, '<C-A-j>', ':new<cr>', { desc = 'Pane open below', silent = true })
 map({ 'n', 'i' }, '<C-A-k>', ':split<cr>', { desc = 'Pane open below', silent = true })
 
+-- Auto-pane: split based on window dimensions (like tmux auto-pane.sh)
+local function get_auto_split_direction()
+  local win_width = vim.api.nvim_win_get_width(0)
+  local win_height = vim.api.nvim_win_get_height(0)
+
+  -- Get editor dimensions (excluding cmdline)
+  local editor_width = vim.o.columns
+  local editor_height = vim.o.lines - vim.o.cmdheight - 1
+
+  -- Check if window is fullscreen (only window)
+  local is_fullscreen = win_width >= editor_width - 2 and win_height >= editor_height - 2
+
+  -- If fullscreen or width > height * 4, split vertically (new pane to right)
+  return is_fullscreen or win_width > win_height * 4
+end
+
+local function auto_pane()
+  if get_auto_split_direction() then
+    vim.cmd 'vsplit'
+  else
+    vim.cmd 'split'
+  end
+end
+
+local function auto_pane_new()
+  if get_auto_split_direction() then
+    vim.cmd 'vnew'
+  else
+    vim.cmd 'new'
+  end
+end
+
+map('n', '<C-w><CR>', auto_pane, { desc = 'Auto pane (split based on dimensions)', silent = true })
+map('n', '<C-w><C-CR>', auto_pane_new, { desc = 'Auto pane with new file', silent = true })
+
 -- Window tile resizing
 map({ 'n', 'i' }, '<C-S-A-h>', ':vertical resize -2<cr>', { desc = 'Resize vertical pane down', silent = true })
 map({ 'n', 'i' }, '<C-S-A-j>', ':resize -2<cr>', { desc = 'Resize horizontal pane down', silent = true })
@@ -96,6 +131,78 @@ map({ 'n', 'i' }, '<C-A-ScrollWheelUp>', smart_resize_horizontal(-1), { desc = '
 map({ 'n', 'i' }, '<C-A-ScrollWheelDown>', smart_resize_horizontal(1), { desc = 'Resize vertical pane right', silent = true })
 map({ 'n', 'i' }, '<C-A-S-ScrollWheelDown>', smart_resize_vertical(1), { desc = 'Resize horizontal pane up', silent = true })
 map({ 'n', 'i' }, '<C-A-S-ScrollWheelUp>', smart_resize_vertical(-1), { desc = 'Resize horizontal pane down', silent = true })
+
+-- Pane resize mode with C-w + scroll/arrows (repeatable)
+local resize_mode_timer = nil
+local resize_mode_active = false
+
+-- Forward-declared so exit_resize_mode can restore the real scroll-wheel
+-- mappings once the resize-mode hijack ends. Defined further down, beside
+-- makeScroll / makeInsertScroll.
+local apply_scroll_mappings
+
+local function exit_resize_mode()
+  if resize_mode_timer then
+    resize_mode_timer:stop()
+    resize_mode_timer = nil
+  end
+  resize_mode_active = false
+  -- Restore normal wheel behavior: scroll the focused pane, not whichever
+  -- pane the mouse is over. (The default handler targets the mouse window,
+  -- which is exactly the bug these mappings exist to prevent.) The arrow and
+  -- <Esc> overrides below have no baseline mapping, so deleting them suffices.
+  apply_scroll_mappings()
+  vim.api.nvim_del_keymap('n', '<Left>')
+  vim.api.nvim_del_keymap('n', '<Right>')
+  vim.api.nvim_del_keymap('n', '<Up>')
+  vim.api.nvim_del_keymap('n', '<Down>')
+  vim.api.nvim_del_keymap('n', '<Esc>')
+end
+
+local function reset_resize_timer()
+  if resize_mode_timer then
+    resize_mode_timer:stop()
+  end
+  resize_mode_timer = vim.defer_fn(exit_resize_mode, 1500)
+end
+
+local function make_resize_action(resize_fn)
+  return function()
+    resize_fn()
+    reset_resize_timer()
+  end
+end
+
+local function enter_resize_mode(initial_resize_fn)
+  return function()
+    initial_resize_fn()
+    if resize_mode_active then
+      reset_resize_timer()
+      return
+    end
+    resize_mode_active = true
+    local opts = { noremap = true, silent = true }
+    vim.api.nvim_set_keymap('n', '<ScrollWheelLeft>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_horizontal(-1)) }))
+    vim.api.nvim_set_keymap('n', '<ScrollWheelRight>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_horizontal(1)) }))
+    vim.api.nvim_set_keymap('n', '<ScrollWheelUp>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_vertical(-1)) }))
+    vim.api.nvim_set_keymap('n', '<ScrollWheelDown>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_vertical(1)) }))
+    vim.api.nvim_set_keymap('n', '<Left>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_horizontal(-1)) }))
+    vim.api.nvim_set_keymap('n', '<Right>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_horizontal(1)) }))
+    vim.api.nvim_set_keymap('n', '<Up>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_vertical(-1)) }))
+    vim.api.nvim_set_keymap('n', '<Down>', '', vim.tbl_extend('force', opts, { callback = make_resize_action(smart_resize_vertical(1)) }))
+    vim.api.nvim_set_keymap('n', '<Esc>', '', vim.tbl_extend('force', opts, { callback = exit_resize_mode }))
+    reset_resize_timer()
+  end
+end
+
+map('n', '<C-w><ScrollWheelLeft>', enter_resize_mode(smart_resize_horizontal(-1)), { desc = 'Resize pane narrower', silent = true })
+map('n', '<C-w><ScrollWheelRight>', enter_resize_mode(smart_resize_horizontal(1)), { desc = 'Resize pane wider', silent = true })
+map('n', '<C-w><ScrollWheelUp>', enter_resize_mode(smart_resize_vertical(-1)), { desc = 'Resize pane shorter', silent = true })
+map('n', '<C-w><ScrollWheelDown>', enter_resize_mode(smart_resize_vertical(1)), { desc = 'Resize pane taller', silent = true })
+map('n', '<C-w><Left>', enter_resize_mode(smart_resize_horizontal(-1)), { desc = 'Resize pane narrower', silent = true })
+map('n', '<C-w><Right>', enter_resize_mode(smart_resize_horizontal(1)), { desc = 'Resize pane wider', silent = true })
+map('n', '<C-w><Up>', enter_resize_mode(smart_resize_vertical(-1)), { desc = 'Resize pane shorter', silent = true })
+map('n', '<C-w><Down>', enter_resize_mode(smart_resize_vertical(1)), { desc = 'Resize pane taller', silent = true })
 
 local closeTab = function()
   require('mini.bufremove').unshow()
@@ -313,15 +420,23 @@ local makeInsertScroll = function(direction)
   end
 end
 
-map({ 'n', 'v' }, '<ScrollWheelUp>', makeScroll 'k', { desc = 'Scroll up' })
-map({ 'n', 'v' }, '<ScrollWheelDown>', makeScroll 'j', { desc = 'Scroll down' })
-map('i', '<ScrollWheelUp>', makeInsertScroll 'k', { desc = 'Scroll up', silent = true })
-map('i', '<ScrollWheelDown>', makeInsertScroll 'j', { desc = 'Scroll down', silent = true })
+-- By default a wheel event scrolls whichever pane the mouse is hovering.
+-- Bind the wheel to normal-mode movement so it always scrolls the *focused*
+-- pane instead. Wrapped in a function so the <C-w> resize-mode machinery can
+-- re-apply it on exit (resize mode temporarily repurposes the wheel).
+apply_scroll_mappings = function()
+  map({ 'n', 'v' }, '<ScrollWheelUp>', makeScroll 'k', { desc = 'Scroll up' })
+  map({ 'n', 'v' }, '<ScrollWheelDown>', makeScroll 'j', { desc = 'Scroll down' })
+  map('i', '<ScrollWheelUp>', makeInsertScroll 'k', { desc = 'Scroll up', silent = true })
+  map('i', '<ScrollWheelDown>', makeInsertScroll 'j', { desc = 'Scroll down', silent = true })
 
-map({ 'n', 'v' }, '<ScrollWheelLeft>', makeScroll 'h', { desc = 'Scroll left' })
-map({ 'n', 'v' }, '<ScrollWheelRight>', makeScroll 'l', { desc = 'Scroll right' })
-map('i', '<ScrollWheelLeft>', makeInsertScroll 'h', { desc = 'Scroll left', silent = true })
-map('i', '<ScrollWheelRight>', makeInsertScroll 'l', { desc = 'Scroll Right', silent = true })
+  map({ 'n', 'v' }, '<ScrollWheelLeft>', makeScroll 'h', { desc = 'Scroll left' })
+  map({ 'n', 'v' }, '<ScrollWheelRight>', makeScroll 'l', { desc = 'Scroll right' })
+  map('i', '<ScrollWheelLeft>', makeInsertScroll 'h', { desc = 'Scroll left', silent = true })
+  map('i', '<ScrollWheelRight>', makeInsertScroll 'l', { desc = 'Scroll Right', silent = true })
+end
+
+apply_scroll_mappings()
 
 map({ 'n', 'i', 'v' }, '<S-ScrollWheelUp>', '{', { desc = 'Scroll up to whitespace', silent = true })
 map({ 'n', 'i', 'v' }, '<S-ScrollWheelDown>', '}', { desc = 'Scroll down to whitespace', silent = true })
@@ -331,4 +446,8 @@ map({ 'n', 'i', 'v' }, '<Mouse5>', '<cmd>BufSurfForward<cr>', { desc = 'Navigate
 -- Add normal paste back into command mode:
 map('c', '<C-S-V>', '<C-R>*', { desc = 'Paste from clipboard' })
 
+-- clear whitespace from line ends
+map('n', '<leader>ds', ':%s/\\s\\+$/<cr>')
+-- %s/\s\+$/
+--
 require 'user.keymaps'
