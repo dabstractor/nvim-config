@@ -12,6 +12,7 @@ return { -- LSP Configuration & Plugins
     -- `lazydev` configures LuaLS for editing your Neovim config, runtime and plugins
     -- (replaces the end-of-life neodev.nvim). Configured automatically via opts.
     { 'folke/lazydev.nvim', opts = {} },
+    { 'Saghen/blink.cmp' }, -- loads before lsp config so capabilities resolve
   },
   config = function()
     -- Runs when an LSP attaches to a buffer. Buffer-local keymaps + reference highlight.
@@ -50,7 +51,7 @@ return { -- LSP Configuration & Plugins
 
     -- Capabilities: nvim-cmp for now (Phase 4 swaps in blink.cmp).
     local capabilities = vim.lsp.protocol.make_client_capabilities()
-    capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+    capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').get_lsp_capabilities())
     -- Apply capabilities to EVERY server config (the '*' wildcard).
     vim.lsp.config('*', { capabilities = capabilities })
 
