@@ -1,30 +1,37 @@
 return { -- Highlight, edit, and navigate code
+  -- nvim-treesitter (main branch) is now a slim *parser manager*. Highlighting,
+  -- folding and indentation are native Neovim (0.11+) features; we start them
+  -- per-buffer below. This replaces the old frozen `master` API
+  -- (`require('nvim-treesitter.configs').setup{ highlight=..., indent=... }`),
+  -- which no longer exists on `main`.
   'nvim-treesitter/nvim-treesitter',
+  branch = 'main',
+  lazy = false,
   build = ':TSUpdate',
-  opts = {
-    ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc' },
-    -- Autoinstall languages that are not installed
-    auto_install = true,
-    highlight = {
-      enable = true,
-      -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-      --  If you are experiencing weird indenting issues, add the language to
-      --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-      additional_vim_regex_highlighting = { 'ruby' },
-    },
-    indent = { enable = true, disable = { 'ruby' } },
-  },
-  config = function(_, opts)
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+  config = function()
+    -- Ensure the parsers we use are installed (async; a no-op once present).
+    require('nvim-treesitter').install {
+      'bash', 'c', 'cpp', 'css', 'csv', 'diff', 'dockerfile', 'git_config',
+      'git_rebase', 'gitcommit', 'gitignore', 'go', 'html', 'http', 'ini',
+      'javascript', 'json', 'lua', 'make', 'markdown', 'markdown_inline',
+      'php', 'python', 'query', 'regex', 'requirements', 'rust', 'toml', 'tsx',
+      'typescript', 'vim', 'vimdoc', 'yaml',
+    }
 
-    ---@diagnostic disable-next-line: missing-fields
-    require('nvim-treesitter.configs').setup(opts)
+    -- Native treesitter highlighting for any filetype that has a parser.
+    vim.api.nvim_create_autocmd('FileType', {
+      group = vim.api.nvim_create_augroup('nvim-treesitter-start', { clear = true }),
+      callback = function(args)
+        pcall(vim.treesitter.start, args.buf)
+      end,
+    })
 
-    -- There are additional nvim-treesitter modules that you can use to interact
-    -- with nvim-treesitter. You should go explore a few and see what interests you:
-    --
-    --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-    --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-    --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    -- NOTE: treesitter *indent* was enabled on the old master branch, but on `main`
+    -- it is explicitly experimental and can mis-indent code, so it is intentionally
+    -- left off here. To re-enable, add inside the FileType callback above:
+    --   vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    -- Folding (also native) can be enabled similarly with:
+    --   vim.wo[0][0].foldmethod = 'expr'
+    --   vim.wo[0][0].foldexpr = 'v:lua.vim.treesitter.foldexpr()'
   end,
 }
