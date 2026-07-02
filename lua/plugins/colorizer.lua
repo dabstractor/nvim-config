@@ -1,6 +1,7 @@
 return {
   {
-    'norcalli/nvim-colorizer.lua',
+    'catgoose/nvim-colorizer.lua',
+    name = 'catgoose-colorizer', -- distinct dir so lazy doesn't keep the norcalli fork
     config = function()
       require('colorizer').setup {
         filetypes = { 'css', 'html', 'javascript', 'lua' }, -- Add filetypes as needed

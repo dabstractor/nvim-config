@@ -116,23 +116,9 @@ require('lazy').setup({
   --  This is equivalent to:
   --    require('Comment').setup({})
 
-  -- "gc" to comment visual regions/lines
-  {
-    'numToStr/Comment.nvim',
-    dependencies = {
-      { 'nvim-treesitter/nvim-treesitter', build = ':TSUpdate' },
-    },
-    config = function()
-      require('Comment').setup {
-        pre_hook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook(),
-      }
-    end,
-  },
-  -- JSX commenting support
-  {
-    'JoosepAlviste/nvim-ts-context-commentstring',
-    opts = { enable_autocmd = true },
-  },
+  -- Commenting is now handled by Neovim's native `gc`/`gcc`/`gb` (built into 0.10+),
+  -- context-enhanced by folke/ts-comments.nvim (e.g. JSX gets {/* */}).
+  -- See lua/plugins/ts-comments.lua. (Replaces Comment.nvim + nvim-ts-context-commentstring.)
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
   --    require('gitsigns').setup({ ... })
@@ -289,7 +275,9 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<C-w><C-w>', builtin.buffers, { desc = 'Find existing buffers' })
-      vim.keymap.set('n', '<Esc>', "lua require('telescope.actions').close()", { desc = 'Close Telescope' })
+      -- (Removed a global normal-mode <Esc> -> telescope.actions.close() mapping: it was
+      -- dead code, overwritten by the nohlsearch <Esc> binding in keymaps.lua, and
+      -- telescope already binds <Esc> correctly *inside* its pickers.)
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()

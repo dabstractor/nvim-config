@@ -162,7 +162,7 @@ return { -- Autocompletion
         ['<ScrollWheelDown>'] = cmp.mapping(next, { 'i', 's' }),
 
         ['<C-k>'] = cmp.mapping(previous, { 'i', 's' }),
-        ['<ScrollWheelUp'] = cmp.mapping(previous, { 'i', 's' }),
+        ['<ScrollWheelUp>'] = cmp.mapping(previous, { 'i', 's' }),
 
         ['<Esc>'] = cmp.mapping(function(fallback)
           local tookAction = false

@@ -14,7 +14,9 @@ map('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = 'Clear search highlight' })
 -- Diagnostic keymaps
 map('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 map('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-map('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
+-- Diagnostic float moved off <leader>e (which collided with the old escape.nvim binding).
+-- `gl` is the conventional LazyVim binding for line diagnostics.
+map('n', 'gl', vim.diagnostic.open_float, { desc = 'Show diagnostic float' })
 map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 --
@@ -269,28 +271,14 @@ map({ 'n', 'i' }, '<C-S-p>', ':Telescope buffers<cr>', { desc = 'Fuzzy Find In O
 map({ 'n', 'i' }, '<C-a>', '<cmd>normal ggVG<cr>', { desc = 'Select all (Normal Mode)', silent = true })
 
 -- map Ctrl + / to comment line
-
-local comment = function()
-  require('Comment.api').toggle.linewise.current()
-end
-
-map('n', '<C-/>', comment, { noremap = true, desc = 'Comment line (Normal mode)', silent = true })
-map('i', '<C-/>', comment, { noremap = true, desc = 'Comment line (Visual Mode)', silent = true })
-map('v', '<C-/>', '<ESC><cmd>lua require("Comment.api").toggle.linewise(vim.fn.visualmode())<cr>gv=gv', { desc = 'Comment line (Visual Mode)', silent = true })
-
-map('v', '<C-A-/>', '<C-\\><C-N><Cmd>lua require("Comment.api").toggle.blockwise(vim.fn.visualmode())<CR>', { noremap = true, silent = true })
-
-map('v', '<C-S>?', function()
-  require('Comment.api').toggle.blockwise(vim.fn.visualmode())
-  vim.cmd 'normal! gv=gv'
-end, { desc = 'Comment line (Visual Mode)', silent = true })
-
-map(
-  'v',
-  '<C-Alt-/>',
-  '<Cmd>lua require("Comment.api").toggle.blockwise(vim.fn.visualmode())<CR>',
-  { noremap = true, silent = true, desc = 'Comment block (Visual Mode)' }
-)
+-- Commenting: Neovim's native `gc`/`gcc`/`gb` (built into 0.10+), context-aware via
+-- ts-comments.nvim (e.g. JSX gets {/* */}). <C-/> is kept as an alias for muscle memory.
+map('n', '<C-/>', 'gcc', { remap = true, desc = 'Comment line', silent = true })
+map('i', '<C-/>', '<C-o>gcc', { remap = true, desc = 'Comment line', silent = true })
+map('v', '<C-/>', 'gc', { remap = true, desc = 'Comment selection (line)', silent = true })
+map('v', '<C-A-/>', 'gb', { remap = true, desc = 'Comment selection (block)', silent = true })
+map('v', '<C-Alt-/>', 'gb', { remap = true, desc = 'Comment selection (block)', silent = true })
+map('v', '<C-S>?', 'gb', { remap = true, desc = 'Comment selection (block)', silent = true })
 
 -- map Ctrl + o to open project
 map('n', '<Leader>oo', ':cd ~/', { noremap = true, desc = 'Open Project' })
@@ -373,8 +361,8 @@ map({ 'n', 'v' }, '<leader>h', '<cmd>tabprevious<cr>', { desc = 'Switch to previ
 map({ 'n', 'v' }, '<leader>rr', ':Rest run<cr>', { desc = 'Rest Run', silent = true, noremap = true })
 map({ 'n', 'v' }, '<leader>re', ':Telescope rest select_env<cr>', { desc = 'Rest Run', silent = true, noremap = true })
 
--- Escape.nvim
-map({ 'n', 'v' }, '<leader>e', ':lua require("escape").escape', { noremap = true, silent = true })
+-- string-escaping now lives on <leader>es via stringbreaker.nvim (replaces the old,
+-- never-installed escape.nvim whose require('escape') call errored on keypress).
 
 -- DapInfo
 map('n', '<leader>br', '<cmd>DapInfoRevealBp<cr>', { desc = 'Dap Info Show Breakpoint Info', silent = true })

@@ -98,7 +98,7 @@ return {
 
   'folke/flash.nvim',
 
-  'folke/neodev.nvim',
+  'folke/flash.nvim',
 
   'folke/zen-mode.nvim',
 
