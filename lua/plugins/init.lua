@@ -29,11 +29,7 @@ return {
     },
   },
 
-  {
-    'lukas-reineke/indent-blankline.nvim',
-    main = 'ibl',
-    opts = {},
-  },
+  -- (indent-blankline removed in Phase 2; mini.indentscope provides the guide line.)
 
   {
     'kylechui/nvim-surround',
@@ -110,7 +106,7 @@ return {
 
   'mfussenegger/nvim-lua-debugger',
 
-  'junegunn/fzf.vim',
+  -- 'junegunn/fzf.vim', -- removed Phase 2: legacy vimscript fzf wrapper, redundant with fzf-lua/telescope
 
   'tpope/vim-fugitive',
 
