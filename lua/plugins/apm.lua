@@ -6,6 +6,6 @@ return {
     apm:setup {}
     vim.keymap.set('n', '<leader>apm', function()
       apm:toggle_monitor()
-    end)
+    end, { desc = 'Toggle APM monitor' })
   end,
 }

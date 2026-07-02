@@ -338,12 +338,12 @@ map({ 'n', 'i', 'v' }, '<C-A-S-U>', '<cmd>UndotreeToggle<cr>', { desc = 'Toggle 
 
 -- BufSurf
 
-map({ 'n', 'i', 'v' }, '<A-l>', '<cmd>BufSurfForward<cr>', { noremap = true, silent = true })
-map({ 'n', 'i', 'v' }, '<A-h>', '<cmd>BufSurfBack<cr>', { noremap = true, silent = true })
-map({ 'n', 'i', 'v' }, '<A-ScrollWheelDown>', '<cmd>BufSurfForward<cr>', { noremap = true, silent = true })
-map({ 'n', 'i', 'v' }, '<A-ScrollWheelUp>', '<cmd>BufSurfBack<cr>', { noremap = true, silent = true })
-map({ 'n', 'i', 'v' }, '<X1Mouse>', '<cmd>BufSurfBack<cr>', { noremap = true, silent = true })
-map({ 'n', 'i', 'v' }, '<X2Mouse>', '<cmd>BufSurfForward<cr>', { noremap = true, silent = true })
+map({ 'n', 'i', 'v' }, '<A-l>', '<cmd>BufSurfForward<cr>', { desc = 'BufSurf forward', noremap = true, silent = true })
+map({ 'n', 'i', 'v' }, '<A-h>', '<cmd>BufSurfBack<cr>', { desc = 'BufSurf back', noremap = true, silent = true })
+map({ 'n', 'i', 'v' }, '<A-ScrollWheelDown>', '<cmd>BufSurfForward<cr>', { desc = 'BufSurf forward', noremap = true, silent = true })
+map({ 'n', 'i', 'v' }, '<A-ScrollWheelUp>', '<cmd>BufSurfBack<cr>', { desc = 'BufSurf back', noremap = true, silent = true })
+map({ 'n', 'i', 'v' }, '<X1Mouse>', '<cmd>BufSurfBack<cr>', { desc = 'Navigate back', noremap = true, silent = true })
+map({ 'n', 'i', 'v' }, '<X2Mouse>', '<cmd>BufSurfForward<cr>', { desc = 'Navigate forward', noremap = true, silent = true })
 
 -- Tabs
 
@@ -382,9 +382,6 @@ map('v', '<leader>cc', "<cmd>'<,'>CodeCompanionChat<cr>", { desc = 'Code Compani
 map('v', '<leader>cm', "<cmd>'<,'>CodeCompanionCmd<cr>", { desc = 'Code Companion Prompt Command', silent = true })
 map('v', '<leader>cp', "<cmd>'<,'>CodeCompanion<cr>", { desc = 'Code Companion Prompt', silent = true })
 map('v', '<leader>cn', "<cmd>'<,'>CodeCompanionActions<cr>", { desc = 'Code Companion Actions', silent = true })
-
-map({ 'n', 'v' }, '<leader>cs', '<cmd>CodeCompanionSave<cr>', { desc = 'Code Companion Save Chats', silent = true })
-map({ 'n', 'v' }, '<leader>cs', '<cmd>CodeCompanionLoad<cr>', { desc = 'Code Companion Load Chats', silent = true })
 
 map('n', 'gV', '`[v`]', { desc = 'Resume last selection' })
 
@@ -436,8 +433,7 @@ map({ 'n', 'i', 'v' }, '<Mouse5>', '<cmd>BufSurfForward<cr>', { desc = 'Navigate
 -- Add normal paste back into command mode:
 map('c', '<C-S-V>', '<C-R>*', { desc = 'Paste from clipboard' })
 
--- clear whitespace from line ends
-map('n', '<leader>ds', ':%s/\\s\\+$/<cr>')
--- %s/\s\+$/
---
+-- (The global <leader>ds "clear trailing whitespace" binding was removed: it had
+-- no desc and collided with the LSP <leader>ds "Document Symbols" mapping. The
+-- LSP binding is kept, so <leader>ds = Document Symbols in LSP buffers.)
 require 'user.keymaps'
