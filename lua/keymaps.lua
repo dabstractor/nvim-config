@@ -361,8 +361,10 @@ map({ 'n', 'v' }, '<leader>h', '<cmd>tabprevious<cr>', { desc = 'Switch to previ
 map({ 'n', 'v' }, '<leader>rr', ':Rest run<cr>', { desc = 'Rest Run', silent = true, noremap = true })
 map({ 'n', 'v' }, '<leader>re', ':Telescope rest select_env<cr>', { desc = 'Rest Run', silent = true, noremap = true })
 
--- string-escaping now lives on <leader>es via stringbreaker.nvim (replaces the old,
--- never-installed escape.nvim whose require('escape') call errored on keypress).
+-- String escape/unescape toggle (replaces the old escape.nvim that errored).
+-- <leader>es toggles the current line / selection between {"a":"b"} and {\"a\":\"b\"}.
+map('n', '<leader>es', function() require('utils.escape').line() end, { desc = '[E]scape [s]tring toggle' })
+map('x', '<leader>es', function() require('utils.escape').selection() end, { desc = '[E]scape [s]tring toggle (selection)' })
 
 -- DapInfo
 map('n', '<leader>br', '<cmd>DapInfoRevealBp<cr>', { desc = 'Dap Info Show Breakpoint Info', silent = true })
