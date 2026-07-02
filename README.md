@@ -119,9 +119,6 @@ Hotkeys:
 - Multi-cursor skip: `q` when in multi-cursor mode
 - Cursor per line (visual mode): `Ctrl+Shift+L`
 - Navigate to tabs 1-9: `<Space>1-9`
-- Add Harpoon Mark: `<Space>ha`
-- Open Harpoon: `<Space>h`
-- Navigate to Harpoon marked tabs: `<Space>h1-9`
 - Window Panes:
   - Focus Left: <Ctrl+h>
   - Focus Right: <Ctrl+l>
@@ -144,7 +141,6 @@ Hotkeys:
 - [Vim Fugitive](https://github.com/tpope/vim-fugitive)
 - [Lazy Git](https://github.com/kdheepak/lazygit.nvim)
 - [Vim Visual Multi](https://github.com/mg979/vim-visual-multi)
-- [Harpoon](https://github.com/ThePrimeagen/harpoon)
 - Help Entries (:h [topic])
 - [Neovim Docs](https://neovim.io/doc)
 - [Neovide](https://neovide.dev/)
