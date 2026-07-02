@@ -197,6 +197,8 @@ return { -- LSP Configuration & Plugins
       'prettier',
       -- JS/TS linter (LSP) -- see the `eslint` server above
       'eslint-lsp',
+      -- Markdown linter (used by nvim-lint; see lua/kickstart/plugins/lint.lua)
+      'markdownlint',
     })
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 

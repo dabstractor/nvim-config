@@ -47,7 +47,10 @@ return {
       vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWritePost', 'InsertLeave' }, {
         group = lint_augroup,
         callback = function()
-          require('lint').try_lint()
+          -- pcall: a linter whose binary is missing must never throw. Previously a
+          -- missing `markdownlint` surfaced as a blocking "Press ENTER" error during
+          -- session restore; this keeps lint failures non-fatal.
+          pcall(require('lint').try_lint)
         end,
       })
     end,
