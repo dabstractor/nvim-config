@@ -270,12 +270,17 @@ map({ 'n', 'i' }, '<C-S-p>', ':Telescope buffers<cr>', { desc = 'Fuzzy Find In O
 -- map Ctrl+A to select all
 map({ 'n', 'i' }, '<C-a>', '<cmd>normal ggVG<cr>', { desc = 'Select all (Normal Mode)', silent = true })
 
--- map Ctrl + / to comment line
 -- Commenting: Neovim's native `gc`/`gcc`/`gb` (built into 0.10+), context-aware via
--- ts-comments.nvim (e.g. JSX gets {/* */}). <C-/> is kept as an alias for muscle memory.
+-- ts-comments.nvim (e.g. JSX gets {/* */}). <C-/> is an alias for muscle memory.
+--
+-- Most terminals transmit Ctrl+/ as <C-_> (Ctrl+underscore) rather than <C-/>, so we
+-- bind BOTH forms: <C-/> fires in Neovide / supporting terminals, <C-_> covers the rest.
 map('n', '<C-/>', 'gcc', { remap = true, desc = 'Comment line', silent = true })
+map('n', '<C-_>', 'gcc', { remap = true, desc = 'Comment line', silent = true })
 map('i', '<C-/>', '<C-o>gcc', { remap = true, desc = 'Comment line', silent = true })
+map('i', '<C-_>', '<C-o>gcc', { remap = true, desc = 'Comment line', silent = true })
 map('v', '<C-/>', 'gc', { remap = true, desc = 'Comment selection (line)', silent = true })
+map('v', '<C-_>', 'gc', { remap = true, desc = 'Comment selection (line)', silent = true })
 map('v', '<C-A-/>', 'gb', { remap = true, desc = 'Comment selection (block)', silent = true })
 map('v', '<C-Alt-/>', 'gb', { remap = true, desc = 'Comment selection (block)', silent = true })
 map('v', '<C-S>?', 'gb', { remap = true, desc = 'Comment selection (block)', silent = true })
