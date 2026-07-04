@@ -215,6 +215,13 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
+          -- Global ignore list (applies to EVERY picker: find_files, live_grep, etc.).
+          -- Keep this short -- it's only for paths NOT already covered by .gitignore
+          -- (ripgrep/fd honor .gitignore automatically). The `.git` internals are the
+          -- classic case: `find_files = { hidden = true }` surfaces them otherwise.
+          file_ignore_patterns = {
+            '%.git/', -- hide the whole .git directory's internals
+          },
           mappings = {
             n = {
               ['j'] = 'move_selection_next',
