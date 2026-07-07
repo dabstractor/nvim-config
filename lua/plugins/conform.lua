@@ -29,6 +29,14 @@ return { -- Autoformat
         return false
       end
 
+      -- Don't auto-format Markdown on save. Prettier reflows prose to its
+      -- printWidth and reshuffles lists/tables, which mangles intentional
+      -- formatting and bites both manual and AI-agent edits. Format on
+      -- demand with `<leader>fm` if you really want it.
+      if vim.bo[bufnr].filetype == 'markdown' then
+        return false
+      end
+
       -- Only refuse to format when the file is *structurally* broken.
       --
       -- The footgun this guards against: an unclosed template literal (or a
