@@ -52,8 +52,38 @@ map({ 'n', 'i' }, '<C-S-ScrollWheelDown>', ':winc j<cr>', { desc = 'Move focus t
 map({ 'n', 'i' }, '<C-A-o>', ':only<cr>', { desc = 'Pane becomes the only one', silent = true })
 map({ 'n', 'i' }, '<C-A-w>', ':close<cr>', { desc = 'Pane Close', silent = true })
 
-map({ 'n', 'i' }, '<C-A-h>', ':vnew<cr>', { desc = 'Pane open to the right', silent = true })
-map({ 'n', 'i' }, '<C-A-l>', ':vsplit<cr>', { desc = 'Pane open to the right (current file)', silent = true })
+-- Side-by-side widen: when the window being split is wider than
+-- AUTO_PANE_RIGHT_THRESHOLD columns, resize the new right pane to
+-- AUTO_PANE_RIGHT_WIDTH columns (about 2/3 of a wide window). Mirrors tmux's
+-- @auto-pane-right-width / @auto-pane-right-threshold (see
+-- ~/.config/tmux/tmux.conf). `splitright` is on, so the new window lands on the
+-- right and gets focus — `vertical resize` targets it. `pre_split_width` is the
+-- width of the window *before* the split (the pane being split), matching tmux.
+local AUTO_PANE_RIGHT_WIDTH = 220
+local AUTO_PANE_RIGHT_THRESHOLD = 315
+
+local function widen_right_pane_if_wide(pre_split_width)
+  if AUTO_PANE_RIGHT_WIDTH > 0 and pre_split_width > AUTO_PANE_RIGHT_THRESHOLD then
+    vim.cmd('vertical resize ' .. AUTO_PANE_RIGHT_WIDTH)
+  end
+end
+
+-- Open a side-by-side pane (vsplit/vnew), widening the new right pane when the
+-- window being split was wide enough. Reused by the manual <C-A-h>/<C-A-l>
+-- hooks below. Restores insert mode afterward, matching the old `<Esc>…i`
+-- string mappings these keys used before becoming function callbacks.
+local function open_right(split_cmd)
+  local was_insert = vim.fn.mode() == 'i'
+  local width = vim.api.nvim_win_get_width(0)
+  vim.cmd(split_cmd)
+  widen_right_pane_if_wide(width)
+  if was_insert then
+    vim.cmd 'startinsert'
+  end
+end
+
+map({ 'n', 'i' }, '<C-A-h>', function() open_right 'vnew' end, { desc = 'Pane open to the right', silent = true })
+map({ 'n', 'i' }, '<C-A-l>', function() open_right 'vsplit' end, { desc = 'Pane open to the right (current file)', silent = true })
 map({ 'n', 'i' }, '<C-A-j>', ':new<cr>', { desc = 'Pane open below', silent = true })
 map({ 'n', 'i' }, '<C-A-k>', ':split<cr>', { desc = 'Pane open below', silent = true })
 
@@ -75,7 +105,9 @@ end
 
 local function auto_pane()
   if get_auto_split_direction() then
+    local width = vim.api.nvim_win_get_width(0)
     vim.cmd 'vsplit'
+    widen_right_pane_if_wide(width)
   else
     vim.cmd 'split'
   end
@@ -83,7 +115,9 @@ end
 
 local function auto_pane_new()
   if get_auto_split_direction() then
+    local width = vim.api.nvim_win_get_width(0)
     vim.cmd 'vnew'
+    widen_right_pane_if_wide(width)
   else
     vim.cmd 'new'
   end
