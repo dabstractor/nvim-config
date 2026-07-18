@@ -48,10 +48,23 @@ return {
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
     opts = {
       settings = {
-        -- Ported from the old ts_ls config. These map directly to tsserver's
-        -- UserPreferences.
+        -- These map directly to tsserver's UserPreferences.
         tsserver_file_preferences = {
-          includePackageJsonAutoImports = 'off',
+          -- Auto-import: accepting a completion for an export from another
+          -- module makes tsserver emit the `import` statement via the LSP
+          -- additionalTextEdits that blink.cmp applies on accept.
+          includePackageJsonAutoImports = 'on',
+          includeCompletionsForModuleExports = true,
+          includeCompletionsForImportStatements = true,
+          -- Inlay hints (the display layer is toggled by vim.lsp.inlay_hint
+          -- in lua/lsp.lua; tsserver must be asked to *produce* them here).
+          includeInlayParameterNameHints = 'all',
+          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayFunctionDeclarationTypeHints = true,
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayEnumMemberValueHints = true,
         },
       },
     },

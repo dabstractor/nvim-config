@@ -29,6 +29,9 @@ return { -- LSP Configuration & Plugins
         map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
         map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
         map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+        map('<leader>uh', function()
+          vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }, { bufnr = event.buf })
+        end, 'Toggle Inlay [H]ints')
         map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
         map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
         map('K', vim.lsp.buf.hover, 'Hover Documentation')
@@ -54,6 +57,11 @@ return { -- LSP Configuration & Plugins
     capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').get_lsp_capabilities())
     -- Apply capabilities to EVERY server config (the '*' wildcard).
     vim.lsp.config('*', { capabilities = capabilities })
+
+    -- Inlay hints: show inline type/parameter hints for servers that support
+    -- them (e.g. tsserver via typescript-tools.nvim, whose tsserver_file_preferences
+    -- are configured in lua/plugins/init.lua). Toggle per-buffer with <leader>uh.
+    vim.lsp.inlay_hint.enable(true)
 
     -- Per-server overrides. Servers not listed here use the defaults shipped by
     -- nvim-lspconfig (lsp/<name>.lua). This replaces the old mason-lspconfig
