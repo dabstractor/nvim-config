@@ -52,79 +52,33 @@ map({ 'n', 'i' }, '<C-S-ScrollWheelDown>', ':winc j<cr>', { desc = 'Move focus t
 map({ 'n', 'i' }, '<C-A-o>', ':only<cr>', { desc = 'Pane becomes the only one', silent = true })
 map({ 'n', 'i' }, '<C-A-w>', ':close<cr>', { desc = 'Pane Close', silent = true })
 
--- Side-by-side widen: when the window being split is wider than
--- AUTO_PANE_RIGHT_THRESHOLD columns, resize the new right pane to
--- AUTO_PANE_RIGHT_WIDTH columns (about 2/3 of a wide window). Mirrors tmux's
--- @auto-pane-right-width / @auto-pane-right-threshold (see
--- ~/.config/tmux/tmux.conf). `splitright` is on, so the new window lands on the
--- right and gets focus — `vertical resize` targets it. `pre_split_width` is the
--- width of the window *before* the split (the pane being split), matching tmux.
-local AUTO_PANE_RIGHT_WIDTH = 220
-local AUTO_PANE_RIGHT_THRESHOLD = 315
+-- Auto-pane (size-aware smart split) is provided by the nvim-auto-pane plugin
+-- (~/projects/nvim-auto-pane), a Lua port of tmux-auto-pane. Its <C-w><CR> /
+-- <C-w><C-CR> bindings and the min-columns / min-rows / aspect-ratio /
+-- right-width options are configured in lua/plugins/auto-pane.lua. The helpers
+-- that used to live here (widen_right_pane_if_pair, get_auto_split_direction,
+-- auto_pane, auto_pane_new) moved into that plugin.
 
-local function widen_right_pane_if_wide(pre_split_width)
-  if AUTO_PANE_RIGHT_WIDTH > 0 and pre_split_width > AUTO_PANE_RIGHT_THRESHOLD then
-    vim.cmd('vertical resize ' .. AUTO_PANE_RIGHT_WIDTH)
-  end
-end
-
--- Open a side-by-side pane (vsplit/vnew), widening the new right pane when the
--- window being split was wide enough. Reused by the manual <C-A-h>/<C-A-l>
--- hooks below. Restores insert mode afterward, matching the old `<Esc>…i`
--- string mappings these keys used before becoming function callbacks.
+-- Open a side-by-side pane (vsplit/vnew) at the default (equal) width — these
+-- manual opens are independent of auto-pane's right-width sizing. Restores
+-- insert mode afterward, matching the old `<Esc>…i` string mappings these keys
+-- used before becoming function callbacks.
 local function open_right(split_cmd)
   local was_insert = vim.fn.mode() == 'i'
-  local width = vim.api.nvim_win_get_width(0)
   vim.cmd(split_cmd)
-  widen_right_pane_if_wide(width)
   if was_insert then
     vim.cmd 'startinsert'
   end
 end
 
-map({ 'n', 'i' }, '<C-A-h>', function() open_right 'vnew' end, { desc = 'Pane open to the right', silent = true })
-map({ 'n', 'i' }, '<C-A-l>', function() open_right 'vsplit' end, { desc = 'Pane open to the right (current file)', silent = true })
+map({ 'n', 'i' }, '<C-A-h>', function()
+  open_right 'vnew'
+end, { desc = 'Pane open to the right', silent = true })
+map({ 'n', 'i' }, '<C-A-l>', function()
+  open_right 'vsplit'
+end, { desc = 'Pane open to the right (current file)', silent = true })
 map({ 'n', 'i' }, '<C-A-j>', ':new<cr>', { desc = 'Pane open below', silent = true })
 map({ 'n', 'i' }, '<C-A-k>', ':split<cr>', { desc = 'Pane open below', silent = true })
-
--- Auto-pane: split based on window dimensions (like tmux auto-pane.sh)
-local function get_auto_split_direction()
-  local win_width = vim.api.nvim_win_get_width(0)
-  local win_height = vim.api.nvim_win_get_height(0)
-
-  -- Get editor dimensions (excluding cmdline)
-  local editor_width = vim.o.columns
-  local editor_height = vim.o.lines - vim.o.cmdheight - 1
-
-  -- Check if window is fullscreen (only window)
-  local is_fullscreen = win_width >= editor_width - 2 and win_height >= editor_height - 2
-
-  -- If fullscreen or width > height * 4, split vertically (new pane to right)
-  return is_fullscreen or win_width > win_height * 4
-end
-
-local function auto_pane()
-  if get_auto_split_direction() then
-    local width = vim.api.nvim_win_get_width(0)
-    vim.cmd 'vsplit'
-    widen_right_pane_if_wide(width)
-  else
-    vim.cmd 'split'
-  end
-end
-
-local function auto_pane_new()
-  if get_auto_split_direction() then
-    local width = vim.api.nvim_win_get_width(0)
-    vim.cmd 'vnew'
-    widen_right_pane_if_wide(width)
-  else
-    vim.cmd 'new'
-  end
-end
-
-map('n', '<C-w><CR>', auto_pane, { desc = 'Auto pane (split based on dimensions)', silent = true })
-map('n', '<C-w><C-CR>', auto_pane_new, { desc = 'Auto pane with new file', silent = true })
 
 -- Window tile resizing
 map({ 'n', 'i' }, '<C-S-A-h>', ':vertical resize -2<cr>', { desc = 'Resize vertical pane down', silent = true })
@@ -199,7 +153,7 @@ local function reset_resize_timer()
   if resize_mode_timer then
     resize_mode_timer:stop()
   end
-  resize_mode_timer = vim.defer_fn(exit_resize_mode, 1500)
+  resize_mode_timer = vim.defer_fn(exit_resize_mode, 1000)
 end
 
 local function make_resize_action(resize_fn)
@@ -402,8 +356,12 @@ map({ 'n', 'v' }, '<leader>re', ':Telescope rest select_env<cr>', { desc = 'Rest
 
 -- String escape/unescape toggle (replaces the old escape.nvim that errored).
 -- <leader>es toggles the current line / selection between {"a":"b"} and {\"a\":\"b\"}.
-map('n', '<leader>es', function() require('utils.escape').line() end, { desc = '[E]scape [s]tring toggle' })
-map('x', '<leader>es', function() require('utils.escape').selection() end, { desc = '[E]scape [s]tring toggle (selection)' })
+map('n', '<leader>es', function()
+  require('utils.escape').line()
+end, { desc = '[E]scape [s]tring toggle' })
+map('x', '<leader>es', function()
+  require('utils.escape').selection()
+end, { desc = '[E]scape [s]tring toggle (selection)' })
 
 -- DapInfo
 map('n', '<leader>br', '<cmd>DapInfoRevealBp<cr>', { desc = 'Dap Info Show Breakpoint Info', silent = true })
