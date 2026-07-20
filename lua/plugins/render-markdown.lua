@@ -6,6 +6,11 @@ return {
   dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-web-devicons' },
   opts = {
     file_types = { 'markdown' },
+    checkbox = {
+      enabled = true,
+      unchecked = { icon = '◯ ' },
+      checked = { icon = '𐄂 ' },
+    },
   },
   ft = { 'markdown' },
 }
