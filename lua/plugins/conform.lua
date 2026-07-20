@@ -1,10 +1,11 @@
 local disable_filetypes = { c = true, cpp = true }
 
--- `stop_after_first = true` (inside the list) means "use the first available
--- formatter, ignore the rest" -- i.e. prefer the prettierd daemon, but fall
--- back to the plain prettier CLI if prettierd isn't installed. Both honor the
--- project's .prettierrc / package.json config.
-local prettier = { 'prettierd', 'prettier', stop_after_first = true }
+-- Project-aware formatter resolution. Each filetype below resolves to the
+-- formatter the *project* declares (Biome/dprint/Deno/Ruff/YAPF/yamlfix/...),
+-- and falls back to the Prettier / isort+black / stylua / yamlfmt chain this
+-- config has always used when no project-specific config is present. Detection
+-- lives in lua/utils/format.lua; see the doc-comment there for the rules.
+local fmt = require 'utils.format'
 
 return { -- Autoformat
   'stevearc/conform.nvim',
@@ -77,22 +78,25 @@ return { -- Autoformat
         lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
       }
     end,
+    -- Each value is a function(bufnr) -> string[] so the formatter can be
+    -- chosen per-project at format time (see lua/utils/format.lua). json gets
+    -- its own resolver so the no-config fallback can still include `jq`.
     formatters_by_ft = {
-      lua = { 'stylua' },
-      python = { 'isort', 'black' },
-      javascript = prettier,
-      javascriptreact = prettier,
-      typescript = prettier,
-      typescriptreact = prettier,
-      json = { 'prettierd', 'prettier', 'jq', stop_after_first = true },
-      jsonc = prettier,
-      html = prettier,
-      css = prettier,
-      scss = prettier,
-      less = prettier,
-      markdown = prettier,
-      graphql = prettier,
-      yaml = { 'yamlfmt', 'yamlfix' },
+      lua = fmt.lua,
+      python = fmt.python,
+      javascript = fmt.web,
+      javascriptreact = fmt.web,
+      typescript = fmt.web,
+      typescriptreact = fmt.web,
+      json = fmt.json,
+      jsonc = fmt.web,
+      html = fmt.web,
+      css = fmt.web,
+      scss = fmt.web,
+      less = fmt.web,
+      markdown = fmt.web,
+      graphql = fmt.web,
+      yaml = fmt.yaml,
       openscad = { 'openscad-lsp' },
     },
   },
