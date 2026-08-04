@@ -116,4 +116,7 @@ command('Diff', function()
   vim.cmd 'DiffviewOpen'
 end, { desc = 'Open diff view' })
 
-require 'user.commands'
+-- Force a redraw once the UI has settled (merged from lua/user/commands.lua)
+vim.defer_fn(function()
+  vim.cmd 'redraw'
+end, 1000)

@@ -433,4 +433,5 @@ map('c', '<C-S-V>', '<C-R>*', { desc = 'Paste from clipboard' })
 -- (The global <leader>ds "clear trailing whitespace" binding was removed: it had
 -- no desc and collided with the LSP <leader>ds "Document Symbols" mapping. The
 -- LSP binding is kept, so <leader>ds = Document Symbols in LSP buffers.)
-require 'user.keymaps'
+
+-- Personal keymaps (formerly in lua/user/keymaps.lua) can be added here using `map`.

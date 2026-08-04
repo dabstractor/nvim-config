@@ -93,4 +93,40 @@ end
 
 vim.g.lazygit_floating_window_scaling_factor = 0.98
 
-require 'user.config'
+-- [[ Personal settings (merged from the former lua/user/config.lua) ]]
+
+-- Sync clipboard between OS and Neovim.
+--  Uncomment this option if you want your OS clipboard to sync with Neovim.
+--  See `:help 'clipboard'`
+-- vim.opt.clipboard = 'unnamedplus'
+
+vim.g.dap_home = os.getenv 'HOME' .. '/src/'
+vim.g.incline_config = {
+  hide = {
+    cursorline = true,
+  },
+}
+
+vim.opt.scrolloff = 10
+
+vim.g.scroll_distance_ratio = 0.3
+vim.g.sidescroll_distance_ratio = 0.05
+vim.opt.scroll = 1
+vim.opt.sidescroll = 1
+
+-- GUI font and Neovide appearance (merged from the former lua/user/font.lua)
+-- format: '<Font Name>:h<size>(:<style flags>)'
+-- vim.opt.guifont = 'FiraMono Nerd Font Mono:h15'
+
+-- use a bold font for regular text and set normal bold to extrabold
+if not vim.g.neovide then
+  vim.opt.guifont = 'JetBrainsMono Nerd Font:h16:b'
+else
+  vim.opt.guifont = 'JetBrainsMono Nerd Font:h18:b'
+  vim.g.neovide_scale_factor = 0.94
+  vim.g.neovide_cursor_vfx_mode = 'railgun'
+  vim.g.neovide_vfx_particle_lifetime = 1.5
+  vim.g.neovide_vfx_particle_density = 10
+  vim.g.neovide_cursor_vfx_particle_curl = 2.0
+end
+vim.cmd [[ highlight! link Bold ExtraBold ]]
