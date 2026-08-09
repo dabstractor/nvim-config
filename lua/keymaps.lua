@@ -224,8 +224,10 @@ map({ 'i', 'n', 'v' }, '<C-q><C-q><C-q>', ':q<cr>', { desc = 'Close File', silen
 map({ 'i', 'n', 'v' }, '<C-q><C-q><C-q><C-q>', ':q!<cr>', { desc = 'Close File', silent = true })
 map({ 'i', 'n', 'v' }, '<C-q><C-q><C-q><C-q>', ':q!<cr>', { desc = 'Close File', silent = true })
 
--- map Ctrl + t to new buffer
-map({ 'n', 'i' }, '<C-t>', '<cmd>enew<cr>', { desc = 'New Buffer', silent = true })
+-- New buffer. Was <C-t>, but <C-t> is now the tab-command leader (see "Tabs"
+-- block below). Moved under the window leader as <C-w>t. This intentionally
+-- overrides the default <C-w>t ("cursor to top-left window"), which was unused.
+map('n', '<C-w>t', '<cmd>enew<cr>', { desc = 'New Buffer', silent = true, noremap = true })
 
 -- map Ctrl + q to quit (press enter to confirm, add ! to force)
 -- map({ 'n', 'i' }, '<leader>q', '<cmd>qa', { desc = 'Close Application', silent = true })
@@ -341,10 +343,12 @@ map({ 'n', 'i', 'v' }, '<X2Mouse>', '<cmd>BufSurfForward<cr>', { desc = 'Navigat
 -- Tabs
 
 map({ 'n', 'v' }, '<leader>n', ':enew<cr>', { desc = 'Blank new file', silent = true, noremap = true })
-map({ 'n', 'v' }, '<leader>tt', ':tab split<cr>', { desc = 'New Tab', silent = true, noremap = true })
-map({ 'n', 'v' }, '<leader>tc', ':tabclose<cr>', { desc = 'Close tab', silent = true, noremap = true })
-map({ 'n', 'v' }, '<leader>tl', ':tabnext<cr>', { desc = 'Next tab', silent = true, noremap = true })
-map({ 'n', 'v' }, '<leader>th', ':tabprevious<cr>', { desc = 'Previous tab', silent = true, noremap = true })
+-- Tab commands. Prefix is <C-t> (was <leader>t). <C-t> used to be "new buffer"
+-- above; that action moved to <C-w>t.
+map({ 'n', 'v' }, '<C-t>t', ':tab split<cr>', { desc = 'New Tab', silent = true, noremap = true })
+map({ 'n', 'v' }, '<C-t>c', ':tabclose<cr>', { desc = 'Close tab', silent = true, noremap = true })
+map({ 'n', 'v' }, '<C-t>l', ':tabnext<cr>', { desc = 'Next tab', silent = true, noremap = true })
+map({ 'n', 'v' }, '<C-t>h', ':tabprevious<cr>', { desc = 'Previous tab', silent = true, noremap = true })
 -- map({ 'n', 'v' }, '<leader><Tab>', ':tabnext<cr>', { desc = 'Next tab', silent = true, noremap = true })
 -- map({ 'n', 'v' }, '<leader><S-Tab>', ':tabprevious<cr>', { desc = 'Previous tab', silent = true, noremap = true })
 map({ 'n', 'v' }, '<leader>l', '<cmd>tabnext<cr>', { desc = 'Switch to next tab' })

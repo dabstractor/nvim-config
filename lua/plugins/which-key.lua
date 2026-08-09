@@ -19,7 +19,7 @@ return { -- Useful plugin to show you pending keybinds.
       { '<leader>o', group = 'Open' },
       { '<leader>r', group = 'Replace' },
       { '<leader>s', group = 'Search' },
-      { '<leader>t', group = 'Tabs' },
+      { '<C-t>', group = 'Tabs' },
       { '<leader>w', group = 'Workspace' },
 
       -- NOTE: <leader>h and <leader>l are intentionally NOT declared as groups.
