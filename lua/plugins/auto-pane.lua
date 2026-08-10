@@ -3,7 +3,6 @@
 return {
   {
     'dabstractor/nvim-auto-pane',
-    dir = '~/projects/nvim-auto-pane',
     lazy = false,
     -- Same option names/semantics as the @auto-pane-* tmux options. Values
     -- mirror the user's tmux.conf so nvim splits behave like tmux splits.
