@@ -18,3 +18,23 @@ vim.api.nvim_create_autocmd({ 'VimEnter', 'WinResized' }, {
     end
   end,
 })
+
+-- Remove orphaned ShaDa temp shards (.tmp.a … .tmp.z) left behind when an nvim
+-- process is killed during exit (after writing the temp, before the rename over
+-- main.shada). neovim never garbage-collects these, so they accumulate to E138.
+-- Stopgap until fixed upstream. Only files idle >5 min are touched: a live write
+-- finishes in milliseconds, so anything that stale is a guaranteed orphan
+-- (won't clobber a concurrent write).
+vim.api.nvim_create_autocmd('VimEnter', {
+  group = vim.api.nvim_create_augroup('ShaDaTempCleanup', { clear = true }),
+  desc = 'Remove stale ShaDa .tmp.X orphans',
+  callback = function()
+    local shards = vim.fn.glob(vim.fn.stdpath('state') .. '/shada/main.shada.tmp.*', false, true) or {}
+    local now = os.time()
+    for _, f in ipairs(shards) do
+      if now - (vim.fn.getftime(f) or now) > 300 then
+        os.remove(f)
+      end
+    end
+  end,
+})
