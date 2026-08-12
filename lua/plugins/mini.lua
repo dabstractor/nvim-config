@@ -30,8 +30,51 @@ return { -- Collection of various small independent plugins/modules
     --  You could remove this setup call if you don't like it,
     --  and try some other statusline plugin
     local statusline = require 'mini.statusline'
+
+    -- nvim-stagecoach live indicator: returns '' when idle (combine_groups
+    -- renders an all-empty group as an invisible hl-only segment, so there is
+    -- no stray space), else 'stagecoach  <phase>  <N>s'. pcall-guarded so an
+    -- unloaded/missing module never breaks the statusline (plugin is lazy).
+    local function stagecoach_segment()
+      local ok, sc = pcall(require, 'stagecoach')
+      if not ok then
+        return ''
+      end
+      local s = sc.status()
+      return (s == nil) and '' or s
+    end
+
     -- set use_icons to true if you have a Nerd Font
-    statusline.setup { use_icons = vim.g.have_nerd_font }
+    -- Custom `active` = mini.nvim default (H.default_content_active in
+    -- lua/mini/statusline.lua) with a stagecoach group spliced into the left
+    -- dev-info cluster. Re-check on mini.nvim updates. The `section_location`
+    -- override below still applies because active() calls it lazily at render.
+    statusline.setup {
+      use_icons = vim.g.have_nerd_font,
+      content = {
+        active = function()
+          local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+          local git = statusline.section_git { trunc_width = 40 }
+          local diff = statusline.section_diff { trunc_width = 75 }
+          local diagnostics = statusline.section_diagnostics { trunc_width = 75 }
+          local lsp = statusline.section_lsp { trunc_width = 75 }
+          local filename = statusline.section_filename { trunc_width = 140 }
+          local fileinfo = statusline.section_fileinfo { trunc_width = 120 }
+          local location = statusline.section_location { trunc_width = 75 }
+          local search = statusline.section_searchcount { trunc_width = 75 }
+          return statusline.combine_groups {
+            { hl = mode_hl, strings = { mode } },
+            { hl = 'MiniStatuslineDevinfo', strings = { git, diff, diagnostics, lsp } },
+            { hl = 'MiniStatuslineDevinfo', strings = { stagecoach_segment() } },
+            '%<', -- Mark general truncate point
+            { hl = 'MiniStatuslineFilename', strings = { filename } },
+            '%=', -- End left alignment
+            { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+            { hl = mode_hl, strings = { search, location } },
+          }
+        end,
+      },
+    }
 
     -- You can configure sections in the statusline by overriding their
     -- default behavior. For example, here we set the section for
