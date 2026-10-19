@@ -8,12 +8,11 @@
 -- To switch to the canonical GitHub install later: drop `dir`, add
 --   build = function() require("stagecoach.build").run() end,
 return {
-	"dabstractor/nvim-stagecoach",
-	dir = "~/projects/nvim-stagecoach",
-	cmd = { "Stagecoach", "StagecoachUpdate", "StagecoachInstall" },
-	-- Plugin ships no default keybind; this both binds <Leader><C-a> and lazy-loads on press.
-	keys = {
-		{ "<Leader><C-a>", "<cmd>Stagecoach<cr>", desc = "stagecoach: AI commit" },
-	},
-	opts = {}, -- lazy auto-calls require("stagecoach").setup({})
+  'dabstractor/nvim-stagecoach',
+  cmd = { 'Stagecoach', 'StagecoachUpdate', 'StagecoachInstall' },
+  -- Plugin ships no default keybind; this both binds <Leader><C-a> and lazy-loads on press.
+  keys = {
+    { '<Leader><C-a>', '<cmd>Stagecoach<cr>', desc = 'stagecoach: AI commit' },
+  },
+  opts = {}, -- lazy auto-calls require("stagecoach").setup({})
 }
