@@ -48,7 +48,7 @@ local function read_text(path)
   if not f then
     return nil
   end
-  local s = f:read('*a')
+  local s = f:read '*a'
   f:close()
   return s
 end
