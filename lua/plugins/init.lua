@@ -112,7 +112,7 @@ return {
 
   'mfussenegger/nvim-lua-debugger',
 
-  -- 'junegunn/fzf.vim', -- removed Phase 2: legacy vimscript fzf wrapper, redundant with fzf-lua/telescope
+  'h3pei/copy-file-path.nvim',
 
   'tpope/vim-fugitive',
 
