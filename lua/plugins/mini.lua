@@ -10,8 +10,6 @@ return { -- Collection of various small independent plugins/modules
     --  - ci'  - [C]hange [I]nside [']quote
     require('mini.ai').setup { n_lines = 500 }
 
-    -- (mini.surround removed in Phase 2 dedup; nvim-surround provides ys/cs/ds.)
-
     require('mini.diff').setup()
 
     local map = require 'mini.map'
