@@ -1,6 +1,18 @@
 local map = require 'utils.map'
 local command = vim.api.nvim_create_user_command
 
+-- :SqueezeSpaces — collapse every run of 2+ spaces that sits BETWEEN two
+-- non-space characters into a single space. Whole buffer by default; give it
+-- a range or visual selection to limit scope. Leading indentation and
+-- trailing spaces (markdown hard line breaks) are deliberately left alone.
+command('SqueezeSpaces', function(opts)
+  local first, last = opts.line1, opts.line2
+  if opts.range == 0 then
+    first, last = 1, vim.api.nvim_buf_line_count(0)
+  end
+  vim.cmd(('silent %d,%ds/\\S\\zs \\{2,}\\ze\\S/ /ge'):format(first, last))
+end, { range = true, desc = 'Collapse internal runs of 2+ spaces to one' })
+
 -- Create the "Settings" command
 command('Settings', function()
   -- Save the current directory
