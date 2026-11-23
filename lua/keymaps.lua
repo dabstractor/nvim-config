@@ -17,6 +17,30 @@ map('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic messa
 -- Diagnostic float moved off <leader>e (which collided with the old escape.nvim binding).
 -- `gl` is the conventional LazyVim binding for line diagnostics.
 map('n', 'gl', vim.diagnostic.open_float, { desc = 'Show diagnostic float' })
+
+-- Jump to the next/previous run of TWO or more spaces (double-space hunting
+-- for prose cleanup — replaces the `BBBBBBhx` dance). Lands on the FIRST
+-- space of the run, so a follow-up `x` deletes exactly one space and leaves
+-- a single one behind. Built on search() so the search register (n/N) and
+-- hlsearch stay untouched. Takes a count: `3]<Space>` skips three runs.
+-- Also usable in visual mode (extends selection) and after operators (`d]<Space>`
+-- deletes up to the run).
+local function jump_to_double_space(back)
+  return function()
+    local flags = (back and 'b' or '') .. 'ws'
+    for _ = 1, vim.v.count1 do
+      if vim.fn.search(' \\{2,}', flags) == 0 then
+        vim.notify('No run of 2+ spaces found', vim.log.levels.INFO)
+        break
+      end
+    end
+  end
+end
+for _, mode in ipairs { 'n', 'x', 'o' } do
+  map(mode, '] ', jump_to_double_space(false), { desc = 'Next run of 2+ spaces' })
+  map(mode, '[ ', jump_to_double_space(true), { desc = 'Prev run of 2+ spaces' })
+end
+
 map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 --
@@ -80,9 +104,29 @@ end, { desc = 'Pane open to the right (current file)', silent = true })
 map({ 'n', 'i' }, '<C-A-j>', ':new<cr>', { desc = 'Pane open below', silent = true })
 map({ 'n', 'i' }, '<C-A-k>', ':split<cr>', { desc = 'Pane open below', silent = true })
 
+-- A window with no vertical neighbors (nothing directly above or below it)
+-- has nowhere to donate height: `:resize -2` would shrink it and strand dead
+-- rows above the command-line area. Guard height shrinks against that; height
+-- growth and all width resizes stay unguarded.
+local function has_vertical_neighbor()
+  local current_win = vim.fn.winnr()
+  return vim.fn.winnr 'j' ~= current_win or vim.fn.winnr 'k' ~= current_win
+end
+
+-- Resize the current window's height by `amount` rows (negative = shrink),
+-- refusing to shrink when no vertical neighbor can absorb the freed rows.
+local function resize_vertical(amount)
+  if amount < 0 and not has_vertical_neighbor() then
+    return
+  end
+  vim.cmd('resize ' .. (amount > 0 and '+' or '') .. amount)
+end
+
 -- Window tile resizing
 map({ 'n', 'i' }, '<C-S-A-h>', ':vertical resize -2<cr>', { desc = 'Resize vertical pane down', silent = true })
-map({ 'n', 'i' }, '<C-S-A-j>', ':resize -2<cr>', { desc = 'Resize horizontal pane down', silent = true })
+map({ 'n', 'i' }, '<C-S-A-j>', function()
+  resize_vertical(-2)
+end, { desc = 'Resize horizontal pane down', silent = true })
 map({ 'n', 'i' }, '<C-S-A-k>', ':resize +2<cr>', { desc = 'Resize horizontal pane up', silent = true })
 map({ 'n', 'i' }, '<C-S-A-l>', ':vertical resize +2<cr>', { desc = 'Resize vertical pane up', silent = true })
 
@@ -108,12 +152,10 @@ local function smart_resize_vertical(direction)
     local bottommost_win = vim.fn.winnr 'j'
     local is_bottommost = current_win == bottommost_win
 
-    if is_bottommost then
-      -- Reverse direction for bottommost window
-      vim.cmd('resize ' .. (direction > 0 and '-2' or '+2'))
-    else
-      vim.cmd('resize ' .. (direction > 0 and '+2' or '-2'))
-    end
+    -- Reverse direction for bottommost window (same mapping as before), then
+    -- run the guarded height resize — the guard only bites effective shrinks.
+    local sign = (direction > 0) ~= is_bottommost and 1 or -1
+    resize_vertical(sign * 2)
   end
 end
 
@@ -212,7 +254,7 @@ map({ 'n', 'i' }, '<C-s>', ':w<CR>', { desc = 'Save File', silent = true, norema
 map('n', '<Leader>s', ':w<CR>', { desc = 'Save File', silent = true })
 
 -- map Ctrl+F to telescope live_grep_args (live grep with args)
-map({ 'n', 'i' }, '<C-S-f>', '<cmd>Telescope live_grep_with<cr>', { desc = 'Find Text in Files (Normal Mode)' })
+map({ 'n', 'i' }, '<C-S-f>', '<cmd>Telescope live_grep_args<cr>', { desc = 'Find Text in Files (Normal Mode)' })
 
 -- map Ctrl + w to close Buffer/tab
 -- map({ 'i', 'n' }, '<C-w>', closeTab, { desc = 'Close File', silent = true })
@@ -332,7 +374,6 @@ map({ 'i', 'n' }, '<C-S-u>', '<cmd>UndotreeToggle<cr>', { desc = 'Toggle Undo Tr
 map({ 'n', 'i', 'v' }, '<C-A-S-U>', '<cmd>UndotreeToggle<cr>', { desc = 'Toggle Undo Tree', silent = true })
 
 -- BufSurf
-
 map({ 'n', 'i', 'v' }, '<A-l>', '<cmd>BufSurfForward<cr>', { desc = 'BufSurf forward', noremap = true, silent = true })
 map({ 'n', 'i', 'v' }, '<A-h>', '<cmd>BufSurfBack<cr>', { desc = 'BufSurf back', noremap = true, silent = true })
 map({ 'n', 'i', 'v' }, '<A-ScrollWheelDown>', '<cmd>BufSurfForward<cr>', { desc = 'BufSurf forward', noremap = true, silent = true })
@@ -407,6 +448,9 @@ local makeInsertScroll = function(direction)
     vim.api.nvim_feedkeys('i', 'n', true)
   end
 end
+
+-- diffview
+map({ 'n', 'i', 'v' }, '<leader>dv', '<cmd>DiffviewOpen<cr>', { desc = 'DiffViewToggle', noremap = true, silent = true })
 
 -- By default a wheel event scrolls whichever pane the mouse is hovering.
 -- Bind the wheel to normal-mode movement so it always scrolls the *focused*
