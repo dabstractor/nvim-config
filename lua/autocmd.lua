@@ -1,3 +1,8 @@
+-- QMK getreuer/super_leader sequence definitions (*.def): double-inclusion
+-- X-macro fragments — they only parse when SEQ_* macros are predefined by the
+-- includer, so a .h would fight the LSP. Highlight as plain C.
+vim.filetype.add({ extension = { def = 'c' } })
+
 vim.cmd [[autocmd FileType markdown set tw=160|set wrap]]
 
 -- Recompute scroll/sidescroll from window size (merged from lua/user/autocmd.lua)
