@@ -18,28 +18,15 @@ map('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic messa
 -- `gl` is the conventional LazyVim binding for line diagnostics.
 map('n', 'gl', vim.diagnostic.open_float, { desc = 'Show diagnostic float' })
 
--- Jump to the next/previous run of TWO or more spaces (double-space hunting
--- for prose cleanup — replaces the `BBBBBBhx` dance). Lands on the FIRST
--- space of the run, so a follow-up `x` deletes exactly one space and leaves
--- a single one behind. Built on search() so the search register (n/N) and
--- hlsearch stay untouched. Takes a count: `3]<Space>` skips three runs.
--- Also usable in visual mode (extends selection) and after operators (`d]<Space>`
--- deletes up to the run).
-local function jump_to_double_space(back)
-  return function()
-    local flags = (back and 'b' or '') .. 'ws'
-    for _ = 1, vim.v.count1 do
-      if vim.fn.search(' \\{2,}', flags) == 0 then
-        vim.notify('No run of 2+ spaces found', vim.log.levels.INFO)
-        break
-      end
-    end
-  end
-end
-for _, mode in ipairs { 'n', 'x', 'o' } do
-  map(mode, '] ', jump_to_double_space(false), { desc = 'Next run of 2+ spaces' })
-  map(mode, '[ ', jump_to_double_space(true), { desc = 'Prev run of 2+ spaces' })
-end
+-- Double-space jump navigation for prose cleanup:
+--   ]<Space> / [<Space>  next / prev run of 2+ spaces (the bracket
+--                        Prev/Next family — sibling of builtin ]s spell,
+--                        ]d define, ]q quickfix)
+--   ; / ,                repeat the jump (falls back to native f/t repeat
+--                        after any other movement)
+-- Lands on the first space of the run so `x` fixes it. Details and tests:
+-- lua/utils/double_space.lua
+require('utils.double_space').setup(map)
 
 map('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
