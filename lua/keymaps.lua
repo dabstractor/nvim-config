@@ -6,7 +6,12 @@ require 'concessions'
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
-map('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = 'Clear search highlight' })
+-- Wrapped in a function so the <C-w> resize-mode machinery can re-apply it on
+-- exit (resize mode temporarily hijacks <Esc>).
+local apply_esc_mapping = function()
+  map('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = 'Clear search highlight' })
+end
+apply_esc_mapping()
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
 -- is not what someone will guess without a bit more experience.
@@ -152,6 +157,11 @@ map({ 'n', 'i' }, '<C-A-S-ScrollWheelDown>', smart_resize_vertical(1), { desc = 
 map({ 'n', 'i' }, '<C-A-S-ScrollWheelUp>', smart_resize_vertical(-1), { desc = 'Resize horizontal pane down', silent = true })
 
 -- Pane resize mode with C-w + scroll/arrows (repeatable)
+-- Timeout matches the tmux pane-resize repeat window (see @resize_repeat_active
+-- handling in ~/.config/tmux/tmux.conf). Regression note: 767c685 quietly
+-- dropped this to 1000ms during the nvim-auto-pane migration.
+local RESIZE_MODE_TIMEOUT_MS = 1500
+
 local resize_mode_timer = nil
 local resize_mode_active = false
 
@@ -161,6 +171,10 @@ local resize_mode_active = false
 local apply_scroll_mappings
 
 local function exit_resize_mode()
+  -- Only stop (not close) the timer here: when the timeout fires, this runs
+  -- *from* the timer's own callback, and nvim's defer_fn wrapper is already
+  -- closing the handle — calling :close() again raises "already closing",
+  -- which used to abort the restore below.
   if resize_mode_timer then
     resize_mode_timer:stop()
     resize_mode_timer = nil
@@ -168,21 +182,27 @@ local function exit_resize_mode()
   resize_mode_active = false
   -- Restore normal wheel behavior: scroll the focused pane, not whichever
   -- pane the mouse is over. (The default handler targets the mouse window,
-  -- which is exactly the bug these mappings exist to prevent.) The arrow and
-  -- <Esc> overrides below have no baseline mapping, so deleting them suffices.
+  -- which is exactly the bug these mappings exist to prevent.) The arrow
+  -- overrides have no baseline mapping, so deleting them suffices (pcall in
+  -- case something else already removed them mid-mode). <Esc>, unlike the
+  -- arrows, DOES have a baseline mapping (nohlsearch clear at the top of this
+  -- file), so it is restored rather than deleted — deleting it used to kill
+  -- search-highlight clearing until restart.
   apply_scroll_mappings()
-  vim.api.nvim_del_keymap('n', '<Left>')
-  vim.api.nvim_del_keymap('n', '<Right>')
-  vim.api.nvim_del_keymap('n', '<Up>')
-  vim.api.nvim_del_keymap('n', '<Down>')
-  vim.api.nvim_del_keymap('n', '<Esc>')
+  for _, key in ipairs { '<Left>', '<Right>', '<Up>', '<Down>' } do
+    pcall(vim.api.nvim_del_keymap, 'n', key)
+  end
+  apply_esc_mapping()
 end
 
 local function reset_resize_timer()
+  -- Replaced timers never fired, so stop+close is safe (and avoids leaking
+  -- a uv handle on every resize action).
   if resize_mode_timer then
     resize_mode_timer:stop()
+    resize_mode_timer:close()
   end
-  resize_mode_timer = vim.defer_fn(exit_resize_mode, 1000)
+  resize_mode_timer = vim.defer_fn(exit_resize_mode, RESIZE_MODE_TIMEOUT_MS)
 end
 
 local function make_resize_action(resize_fn)
