@@ -278,10 +278,64 @@ map({ 'i', 'n', 'v' }, '<C-q><C-q><C-q><C-q>', ':q!<cr>', { desc = 'Close File',
 -- overrides the default <C-w>t ("cursor to top-left window"), which was unused.
 map('n', '<C-w>t', '<cmd>enew<cr>', { desc = 'New Buffer', silent = true, noremap = true })
 
--- map Ctrl + q to quit (press enter to confirm, add ! to force)
--- map({ 'n', 'i' }, '<leader>q', '<cmd>qa', { desc = 'Close Application', silent = true })
--- map({ 'n', 'i' }, '<C-S-q>', '<cmd>qa<cr>', { desc = 'Close Application', silent = true })
--- map({ 'n', 'i' }, '<C-A-S-q>', '<cmd>qa!<cr>', { desc = 'Close Application without saving', silent = true })
+-- Save all and quit (Neovim only; contract in docs/quit-keybindings-handoff.md).
+-- `<leader>wq` writes every modified *named* normal file buffer (hidden,
+-- unlisted, other tabs, and not-yet-existing new files alike) with a plain
+-- `:update` inside `nvim_buf_call()`, re-checking eligibility right before each
+-- write because earlier write hooks may save, delete, or repurpose later
+-- buffers. Any failed write, or any buffer still (or newly) dirty after the
+-- pass, keeps Neovim open and is reported; nothing is retried. Unnamed drafts,
+-- special/plugin buffers, and terminals are never written — the final `:qa!`
+-- discards them (the `!` is for quitting, never for writing).
+-- `<leader>qq` is a plain `:qa!`: quit now, no save pass, no prompt.
+-- `<leader>q` (diagnostics location list) keeps no `nowait`: it still fires on
+-- its own after the normal timeout, while `qq` wins inside it.
+local function modified_file_path(buf)
+  if not vim.api.nvim_buf_is_valid(buf) then
+    return nil
+  end
+  if not vim.bo[buf].modified or vim.bo[buf].buftype ~= '' then
+    return nil
+  end
+  local path = vim.api.nvim_buf_get_name(buf)
+  return path ~= '' and path or nil
+end
+
+local function save_all_and_quit()
+  local problems = {}
+  local failed = {}
+
+  for _, info in ipairs(vim.fn.getbufinfo { bufmodified = 1 }) do
+    local buf = info.bufnr
+    local path = modified_file_path(buf)
+    if path then
+      local ok, err = pcall(vim.api.nvim_buf_call, buf, function()
+        vim.cmd.update()
+      end)
+      if not ok then
+        failed[buf] = true
+        problems[#problems + 1] = path .. ': ' .. tostring(err)
+      end
+    end
+  end
+
+  for _, info in ipairs(vim.fn.getbufinfo { bufmodified = 1 }) do
+    local path = modified_file_path(info.bufnr)
+    if path and not failed[info.bufnr] then
+      problems[#problems + 1] = path .. ': still modified after the save pass'
+    end
+  end
+
+  if #problems > 0 then
+    vim.notify('Not quitting:\n' .. table.concat(problems, '\n'), vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd('qa!')
+end
+
+map('n', '<leader>wq', save_all_and_quit, { desc = 'Save all named files and quit' })
+map('n', '<leader>qq', '<cmd>qa!<CR>', { desc = 'Quit all without saving' })
 
 -- map Ctrl + ] and Ctrl + [ to indent/unindent code
 map({ 'n', 'i' }, '<C-]>', '>>', { desc = 'Indent', silent = true })
