@@ -95,6 +95,13 @@ vim.g.lazygit_floating_window_scaling_factor = 0.98
 
 -- [[ Personal settings (merged from the former lua/user/config.lua) ]]
 
+-- Seed the auto-save gate from the environment. pi's split editor launches the
+-- editor via the `externalEditor` setting (`env NVIM_AUTOSAVE=1 nvim`), so in a
+-- pi-spawned session this is "1"; everywhere else the gate stays off and
+-- lua/plugins/autosave.lua's `vim.g.autosave_enabled == true` condition no-ops.
+-- (This line was lost when the old lua/user/ config was merged in commit 335ecde.)
+vim.g.autosave_enabled = vim.env.NVIM_AUTOSAVE == '1'
+
 -- Sync clipboard between OS and Neovim.
 --  Uncomment this option if you want your OS clipboard to sync with Neovim.
 --  See `:help 'clipboard'`
